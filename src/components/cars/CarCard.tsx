@@ -16,9 +16,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface CarCardProps {
     car: Car;
     isFavorited?: boolean;
+    isSelected?: boolean;
+    onSelect?: (id: string) => void;
 }
 
-export function CarCard({ car, isFavorited: initialIsFavorited = false }: CarCardProps) {
+export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelected, onSelect }: CarCardProps) {
     const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
 
     const { data: insights, isLoading: isInsightsLoading } = useQuery({
@@ -47,7 +49,13 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false }: CarCar
     };
 
     return (
-        <Card className="overflow-hidden group hover:shadow-lg transition-shadow duration-300">
+        <Card
+            className={cn(
+                "overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer",
+                isSelected ? "ring-2 ring-primary border-primary" : "border-border"
+            )}
+            onClick={() => onSelect?.(car.id)}
+        >
             <div className="relative aspect-video overflow-hidden">
                 <Image
                     src={car.image}
@@ -113,7 +121,9 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false }: CarCar
                 )}
             </CardContent>
             <CardFooter className="p-4 pt-0">
-                <Button className="w-full h-9">View Details</Button>
+                <Button className="w-full h-9" variant={isSelected ? "default" : "outline"}>
+                    {isSelected ? "Currently Viewing" : "View Details"}
+                </Button>
             </CardFooter>
         </Card>
     );

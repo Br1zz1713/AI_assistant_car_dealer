@@ -38,7 +38,11 @@ export function DiscoveryPlatform({ initialCars }: DiscoveryPlatformProps) {
                         Discover the best deals on cars across the European Union.
                     </p>
                 </div>
-                <CarGrid cars={cars} />
+                <CarGrid
+                    cars={cars}
+                    selectedCarId={selectedCarId}
+                    onSelect={setSelectedCarId}
+                />
             </div>
 
             <aside className="w-full lg:w-72 shrink-0 space-y-8">
