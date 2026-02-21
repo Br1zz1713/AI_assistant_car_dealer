@@ -6,9 +6,10 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Loader2 } from "lucide-react";
+import { Car } from "@/types/car";
 
 interface SidebarProps {
-    onAiSearch?: (cars: any[]) => void;
+    onAiSearch?: (cars: Car[]) => void;
     onClear?: () => void;
 }
 
