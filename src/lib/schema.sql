@@ -1,22 +1,70 @@
--- 1. Create listings table
 CREATE TABLE IF NOT EXISTS public.listings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    brand TEXT NOT NULL,
-    model TEXT NOT NULL,
-    year INTEGER NOT NULL,
-    price INTEGER NOT NULL, -- Price in Euro
-    mileage INTEGER NOT NULL,
-    fuel TEXT NOT NULL,
-    gearbox TEXT NOT NULL DEFAULT 'Manual',
-    country TEXT NOT NULL,
-    location TEXT NOT NULL,
-    image TEXT NOT NULL,
-    gallery TEXT[] DEFAULT '{}',
+    external_id TEXT UNIQUE NOT NULL,
     source_platform TEXT NOT NULL,
-    source_url TEXT NOT NULL,
-    description TEXT,
+    url TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    price NUMERIC NOT NULL,
+    image TEXT,
+    gallery TEXT[] DEFAULT '{}',
+    specs JSONB DEFAULT '{}',
+    country TEXT NOT NULL,
+    is_new_match BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Function to 'upsert' listings to avoid duplicates based on URL or external_id
+CREATE OR REPLACE FUNCTION public.upsert_listing(
+  p_external_id TEXT,
+  p_source_platform TEXT,
+  p_url TEXT,
+  p_title TEXT,
+  p_price NUMERIC,
+  p_image TEXT,
+  p_gallery TEXT[],
+  p_specs JSONB,
+  p_country TEXT
+) RETURNS UUID AS $$
+DECLARE
+  v_id UUID;
+BEGIN
+  INSERT INTO public.listings (
+    external_id, source_platform, url, title, price, image, gallery, specs, country, is_new_match
+  ) VALUES (
+    p_external_id, p_source_platform, p_url, p_title, p_price, p_image, p_gallery, p_specs, p_country, true
+  )
+  ON CONFLICT (url) DO UPDATE SET
+    price = EXCLUDED.price,
+    image = EXCLUDED.image,
+    gallery = EXCLUDED.gallery,
+    specs = EXCLUDED.specs,
+    title = EXCLUDED.title,
+    is_new_match = true,
+    created_at = now()
+  RETURNING id INTO v_id;
+  
+  RETURN v_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Create spotting_subscriptions table for Car Scout
+CREATE TABLE IF NOT EXISTS public.spotting_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    filters JSONB NOT NULL, -- { brand, model, price_max, countries: [] }
+    last_check TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for spotting_subscriptions
+ALTER TABLE public.spotting_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own subscriptions"
+    ON public.spotting_subscriptions
+    FOR ALL
+    TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- 2. Create favorites table
 CREATE TABLE IF NOT EXISTS public.favorites (

@@ -10,6 +10,9 @@ Supabase provides the backend infrastructure for the car listings and user accou
 - **`NEXT_PUBLIC_SUPABASE_URL`**: Your Supabase project URL (e.g., `https://xyz.supabase.co`).
 - **`NEXT_PUBLIC_SUPABASE_ANON_KEY`**: Your Supabase project's anonymous public key.
 
+> [!CAUTION]
+> If `NEXT_PUBLIC_SUPABASE_URL` is set to the placeholder `your-project-url.supabase.co`, real-time features and WebSocket connections will fail with `net::ERR_NAME_NOT_RESOLVED`. Ensure this is updated to your actual Supabase URL.
+
 > [!NOTE]
 > You can find these in your Supabase Dashboard under **Project Settings > API**.
 

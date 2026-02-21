@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { signInWithGithub, signOut } from "@/actions/auth";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { NotificationBell } from "../scout/NotificationBell";
 
 export function Navbar() {
     const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -61,6 +62,7 @@ export function Navbar() {
                 </nav>
 
                 <div className="flex items-center gap-4">
+                    <NotificationBell />
                     <Button variant="ghost" size="icon" className="hidden md:flex">
                         <Search className="h-4 w-4" />
                     </Button>

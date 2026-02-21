@@ -2,6 +2,7 @@ export interface Car {
   id: string;
   brand: string;
   model: string;
+  title?: string;
   year: number;
   price: number;
   mileage: number;

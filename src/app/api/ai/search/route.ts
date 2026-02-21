@@ -44,6 +44,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ cars: filteredCars, params });
     } catch (error) {
         console.error("AI Search Error:", error);
-        return NextResponse.json({ error: "Failed to process AI search" }, { status: 500 });
+        // On error, return all mock cars as a fallback instead of a 500
+        return NextResponse.json({
+            cars: mockCars.slice(0, 10),
+            params: { brand: null, model: null, maxPrice: null, country: null, fuel: null }
+        });
     }
 }

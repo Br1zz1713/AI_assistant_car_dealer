@@ -18,13 +18,17 @@ import {
 
 interface SidebarProps {
     onAiSearch?: (cars: Car[]) => void;
+    onFilter?: (filters: { country: string; brand?: string; model?: string; minPrice?: number; maxPrice?: number }) => void;
     onClear?: () => void;
 }
 
-export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
+export function Sidebar({ onAiSearch, onFilter, onClear }: SidebarProps) {
     const [aiQuery, setAiQuery] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [selectedCountry, setSelectedCountry] = useState<string>("all");
+    const [brand, setBrand] = useState("");
+    const [year, setYear] = useState("");
+    const [priceRange, setPriceRange] = useState([0, 50000]);
 
     const handleAiSearch = async () => {
         if (!aiQuery.trim()) return;
@@ -42,6 +46,29 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
             console.error("AI search failed:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleApplyFilters = () => {
+        if (onFilter) {
+            onFilter({
+                country: selectedCountry,
+                brand: brand || undefined,
+                minPrice: priceRange[0],
+                maxPrice: priceRange[1],
+            });
+        }
+    };
+
+    const handleCountryChange = (value: string) => {
+        setSelectedCountry(value);
+        if (onFilter) {
+            onFilter({
+                country: value,
+                brand: brand || undefined,
+                minPrice: priceRange[0],
+                maxPrice: priceRange[1],
+            });
         }
     };
 
@@ -87,7 +114,7 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
                 <CardContent className="space-y-5">
                     <div className="space-y-2">
                         <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Country</label>
-                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                        <Select value={selectedCountry} onValueChange={handleCountryChange}>
                             <SelectTrigger className="w-full text-sm">
                                 <SelectValue placeholder="All Countries" />
                             </SelectTrigger>
@@ -104,26 +131,63 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Make</label>
-                            <Input placeholder="BMW" className="h-9 text-sm" />
+                            <Input
+                                placeholder="BMW"
+                                className="h-9 text-sm"
+                                value={brand}
+                                onChange={(e) => setBrand(e.target.value)}
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Year</label>
-                            <Input placeholder="2020+" className="h-9 text-sm" />
+                            <Input
+                                placeholder="2020+"
+                                className="h-9 text-sm"
+                                value={year}
+                                onChange={(e) => setYear(e.target.value)}
+                            />
                         </div>
                     </div>
 
                     <div className="space-y-4 pt-2">
                         <div className="flex justify-between items-center">
-                            <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Max Price</label>
-                            <span className="text-xs font-semibold text-primary">€50,000</span>
+                            <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Price Range</label>
+                            <span className="text-xs font-semibold text-primary">
+                                €{priceRange[0].toLocaleString()} - €{priceRange[1].toLocaleString()}
+                            </span>
                         </div>
-                        <Slider defaultValue={[50000]} max={150000} step={5000} />
+                        <Slider
+                            value={priceRange}
+                            onValueChange={setPriceRange}
+                            max={150000}
+                            step={1000}
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Min (€)</span>
+                                <Input
+                                    type="number"
+                                    value={priceRange[0]}
+                                    onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                                    className="h-8 text-xs font-semibold"
+                                />
+                            </div>
+                            <div className="space-y-1 text-right">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Max (€)</span>
+                                <Input
+                                    type="number"
+                                    value={priceRange[1]}
+                                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                                    className="h-8 text-xs font-semibold text-right"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="pt-4 flex flex-col gap-2">
                         <Button
                             className="w-full font-semibold"
-                            onClick={() => { }}
+                            onClick={handleApplyFilters}
                         >
                             Apply Filters
                         </Button>
@@ -131,7 +195,13 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
                             className="w-full text-muted-foreground h-8"
                             variant="ghost"
                             size="sm"
-                            onClick={onClear}
+                            onClick={() => {
+                                setBrand("");
+                                setYear("");
+                                setSelectedCountry("all");
+                                setPriceRange([0, 50000]);
+                                onClear?.();
+                            }}
                         >
                             Reset All
                         </Button>

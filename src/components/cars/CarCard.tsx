@@ -1,7 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { MapPin, Fuel, Calendar, Gauge, Heart, Sparkles, ExternalLink, Cog } from "lucide-react";
+import {
+    Fuel, Calendar, Gauge, Heart, Sparkles,
+    ExternalLink, Cog, ChevronLeft, ChevronRight
+} from "lucide-react";
 import { SourceBadge } from "./SourceBadge";
 import { ImageCarousel } from "./ImageCarousel";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -9,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Car } from "@/types/car";
 import { toggleFavorite } from "@/actions/favorites";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { ValueBadge } from "./ValueBadge";
@@ -23,8 +26,17 @@ interface CarCardProps {
 }
 
 export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelected, onSelect }: CarCardProps) {
+    const [isMounted, setIsMounted] = useState(false);
     const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsMounted(true);
+    }, []);
+
+    const allImages = [car.image, ...(car.gallery || [])];
 
     const { data: insights, isLoading: isInsightsLoading } = useQuery({
         queryKey: ["insights", car.id],
@@ -56,6 +68,16 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
         setIsGalleryOpen(true);
     };
 
+    const nextImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    };
+
+    const prevImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    };
+
     return (
         <>
             <Card
@@ -65,14 +87,36 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
                 )}
                 onClick={() => onSelect?.(car.id)}
             >
-                <div className="relative aspect-video overflow-hidden bg-muted">
+                <div className="relative aspect-video overflow-hidden bg-muted group/image">
                     <Image
-                        src={car.image}
+                        src={allImages[currentImageIndex]}
                         alt={`${car.brand} ${car.model}`}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                         onClick={handleOpenGallery}
                     />
+
+                    {/* Inline Carousel Controls */}
+                    {allImages.length > 1 && (
+                        <div className="absolute inset-0 flex items-center justify-between p-2 opacity-0 group-hover/image:opacity-100 transition-opacity">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70"
+                                onClick={prevImage}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70"
+                                onClick={nextImage}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Overlay Badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-2">
@@ -100,9 +144,21 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
                         )}
                     </div>
 
-                    {car.gallery.length > 0 && (
+                    <div className="absolute bottom-2 left-2 flex gap-1">
+                        {allImages.map((_, i) => (
+                            <div
+                                key={i}
+                                className={cn(
+                                    "h-1 w-4 rounded-full transition-all",
+                                    i === currentImageIndex ? "bg-white" : "bg-white/40"
+                                )}
+                            />
+                        ))}
+                    </div>
+
+                    {allImages.length > 1 && (
                         <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-sm">
-                            {car.gallery.length} photos
+                            {currentImageIndex + 1} / {allImages.length}
                         </div>
                     )}
                 </div>
@@ -114,7 +170,9 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
                             <p className="text-xs text-muted-foreground mt-1">{car.model}</p>
                         </div>
                         <div className="text-right">
-                            <p className="font-bold text-xl text-primary leading-none">€{car.price.toLocaleString()}</p>
+                            <p className="font-bold text-xl text-primary leading-none">
+                                €{isMounted ? car.price.toLocaleString() : car.price}
+                            </p>
                             <p className="text-[10px] text-muted-foreground mt-1 uppercase font-semibold">{car.location}</p>
                         </div>
                     </div>
@@ -128,7 +186,7 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
                         </div>
                         <div className="flex items-center gap-2">
                             <Gauge className="h-3.5 w-3.5 text-primary/70" />
-                            <span>{car.mileage.toLocaleString()} km</span>
+                            <span>{isMounted ? car.mileage.toLocaleString() : car.mileage} km</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Fuel className="h-3.5 w-3.5 text-primary/70" />
@@ -150,19 +208,20 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
 
                 <CardFooter className="p-4 pt-0 gap-2">
                     <Button
-                        className="flex-1 h-9 font-semibold transition-all"
+                        className="flex-1 h-9 font-semibold transition-all group/btn"
                         variant={isSelected ? "default" : "outline"}
                     >
                         {isSelected ? "Currently Viewing" : "Analyze Specs"}
+                        <Sparkles className="ml-2 h-3 w-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                     </Button>
                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 border border-input hover:bg-muted"
+                        variant="secondary"
+                        className="h-9 px-3 gap-2 font-semibold bg-secondary/50 hover:bg-secondary"
                         asChild
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <a href={car.sourceUrl} target="_blank" rel="noopener noreferrer" title="View on Original Site">
+                        <a href={car.sourceUrl} target="_blank" rel="noopener noreferrer">
+                            <span className="hidden sm:inline">Original</span>
                             <ExternalLink className="h-4 w-4" />
                         </a>
                     </Button>
@@ -170,7 +229,7 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
             </Card>
 
             <ImageCarousel
-                images={car.gallery}
+                images={allImages}
                 isOpen={isGalleryOpen}
                 onOpenChange={setIsGalleryOpen}
                 title={`${car.brand} ${car.model} (${car.year})`}

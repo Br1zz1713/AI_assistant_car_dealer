@@ -45,6 +45,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ content: responseText });
     } catch (error) {
         console.error("AI Chat Error:", error);
-        return NextResponse.json({ error: "Failed to generate chat response" }, { status: 500 });
+        return NextResponse.json({
+            content: "I'm sorry, I'm having trouble connecting to my automotive knowledge base right now. However, I can still help you with standard car specifications or market advice. Please try again in a moment!"
+        });
     }
 }
