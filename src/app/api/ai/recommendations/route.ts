@@ -19,6 +19,10 @@ export async function POST(request: Request) {
       Return ONLY a JSON array of objects with fields: brand, model, price, segment_reason.
     `;
 
+        if (!process.env.GOOGLE_GEMINI_API_KEY) {
+            return NextResponse.json({ recommendations: [] });
+        }
+
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const cleanJson = responseText.replace(/```json|```/g, "").trim();
@@ -27,6 +31,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ recommendations });
     } catch (error) {
         console.error("AI Recommendations Error:", error);
-        return NextResponse.json({ error: "Failed to generate recommendations" }, { status: 500 });
+        return NextResponse.json({ recommendations: [] });
     }
 }

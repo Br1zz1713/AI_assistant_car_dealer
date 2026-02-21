@@ -46,16 +46,16 @@ export function Navbar() {
                 </div>
 
                 <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-                    <Link href="#" className="transition-colors hover:text-primary">
+                    <Link href="/" className="transition-colors hover:text-primary">
                         Buy
                     </Link>
-                    <Link href="#" className="transition-colors hover:text-primary">
+                    <Link href="/" className="transition-colors hover:text-primary">
                         Sell
                     </Link>
-                    <Link href="#" className="transition-colors hover:text-primary">
+                    <Link href="/" className="transition-colors hover:text-primary">
                         AI Search
                     </Link>
-                    <Link href="#" className="transition-colors hover:text-primary">
+                    <Link href="/" className="transition-colors hover:text-primary">
                         About
                     </Link>
                 </nav>
