@@ -13,15 +13,23 @@ export function Navbar() {
     const supabase = createClient();
 
     useEffect(() => {
+        if (!supabase) return;
+
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                setUser(user);
+            } catch (error) {
+                console.error("Auth initialization failed:", error);
+            }
         };
         getUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (_event, session) => {
+                setUser(session?.user ?? null);
+            }
+        );
 
         return () => subscription.unsubscribe();
     }, [supabase]);
