@@ -4,11 +4,17 @@ CREATE TABLE IF NOT EXISTS public.listings (
     brand TEXT NOT NULL,
     model TEXT NOT NULL,
     year INTEGER NOT NULL,
-    price INTEGER NOT NULL,
+    price INTEGER NOT NULL, -- Price in Euro
     mileage INTEGER NOT NULL,
     fuel TEXT NOT NULL,
+    gearbox TEXT NOT NULL DEFAULT 'Manual',
     country TEXT NOT NULL,
+    location TEXT NOT NULL,
     image TEXT NOT NULL,
+    gallery TEXT[] DEFAULT '{}',
+    source_platform TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

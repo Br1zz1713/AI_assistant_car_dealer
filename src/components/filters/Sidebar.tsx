@@ -8,6 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Car } from "@/types/car";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
 interface SidebarProps {
     onAiSearch?: (cars: Car[]) => void;
     onClear?: () => void;
@@ -16,6 +24,7 @@ interface SidebarProps {
 export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
     const [aiQuery, setAiQuery] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedCountry, setSelectedCountry] = useState<string>("all");
 
     const handleAiSearch = async () => {
         if (!aiQuery.trim()) return;
@@ -38,23 +47,24 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
 
     return (
         <div className="space-y-6">
-            <Card className="border-primary/20 bg-primary/5">
+            {/* AI Search Section */}
+            <Card className="border-primary/20 bg-primary/5 shadow-sm">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-primary" />
-                        AI Semantic Search
+                        AI Discovery
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <Input
-                        placeholder="e.g. Reliable family SUV under 30k"
-                        className="bg-background"
+                        placeholder="e.g. SUV from Poland under 20k"
+                        className="bg-background text-sm"
                         value={aiQuery}
                         onChange={(e) => setAiQuery(e.target.value)}
                         disabled={isLoading}
                     />
                     <Button
-                        className="w-full gap-2"
+                        className="w-full gap-2 font-semibold"
                         size="sm"
                         onClick={handleAiSearch}
                         disabled={isLoading}
@@ -64,46 +74,68 @@ export function Sidebar({ onAiSearch, onClear }: SidebarProps) {
                         ) : (
                             <Sparkles className="h-4 w-4" />
                         )}
-                        Search with AI
+                        Smart Search
                     </Button>
                 </CardContent>
             </Card>
 
-            <Card>
+            {/* Manual Filters Section */}
+            <Card className="shadow-sm">
                 <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">Structural Filters</CardTitle>
+                    <CardTitle className="text-lg font-bold">Filters</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-5">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Make</label>
-                        <Input placeholder="e.g. BMW" />
+                        <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Country</label>
+                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                            <SelectTrigger className="w-full text-sm">
+                                <SelectValue placeholder="All Countries" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All EU Markets</SelectItem>
+                                <SelectItem value="Romania">Romania (Autovit/OLX)</SelectItem>
+                                <SelectItem value="Poland">Poland (Otomoto/OLX)</SelectItem>
+                                <SelectItem value="Bulgaria">Bulgaria (Mobile.bg)</SelectItem>
+                                <SelectItem value="Moldova">Moldova (999.md)</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Model</label>
-                        <Input placeholder="e.g. 3 Series" />
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                            <label className="text-sm font-medium">Price Range (€)</label>
-                            <span className="text-sm text-muted-foreground">Up to 50k</span>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Make</label>
+                            <Input placeholder="BMW" className="h-9 text-sm" />
                         </div>
-                        <Slider defaultValue={[50000]} max={100000} step={1000} />
+                        <div className="space-y-2">
+                            <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Year</label>
+                            <Input placeholder="2020+" className="h-9 text-sm" />
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Country</label>
-                        <Input placeholder="e.g. Germany" />
+                    <div className="space-y-4 pt-2">
+                        <div className="flex justify-between items-center">
+                            <label className="text-[12px] font-bold uppercase text-muted-foreground tracking-wider">Max Price</label>
+                            <span className="text-xs font-semibold text-primary">€50,000</span>
+                        </div>
+                        <Slider defaultValue={[50000]} max={150000} step={5000} />
                     </div>
 
-                    <Button
-                        className="w-full"
-                        variant="outline"
-                        onClick={onClear}
-                    >
-                        Clear Filters
-                    </Button>
+                    <div className="pt-4 flex flex-col gap-2">
+                        <Button
+                            className="w-full font-semibold"
+                            onClick={() => { }}
+                        >
+                            Apply Filters
+                        </Button>
+                        <Button
+                            className="w-full text-muted-foreground h-8"
+                            variant="ghost"
+                            size="sm"
+                            onClick={onClear}
+                        >
+                            Reset All
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>
