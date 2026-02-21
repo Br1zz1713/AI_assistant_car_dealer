@@ -32,6 +32,8 @@ When deploying to Vercel, you must add these variables in the **Project Settings
 | `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Development | Supabase Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Development | Supabase Anon Key |
 | `GOOGLE_GEMINI_API_KEY` | Production, Preview, Development | Gemini API Key |
+| `SCRAPER_STRATEGY` | Production, Preview, Development | `direct` (default) or `proxy` |
+| `SCRAPER_API_KEY` | Production, Preview, Development | ScraperAPI key (only if `proxy`) |
 
 ## Example `.env.local`
 ```bash
@@ -41,4 +43,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 
 # Google Gemini
 GOOGLE_GEMINI_API_KEY=your-gemini-api-key
+
+# Scraper Strategy
+# "direct" = stealth headers + rotate UA (free, default)
+# "proxy"  = route via ScraperAPI — handles JS-heavy SPAs (needs SCRAPER_API_KEY)
+SCRAPER_STRATEGY=direct
+# SCRAPER_API_KEY=your_scraperapi_key_here  # get free key: https://scraperapi.com
 ```
