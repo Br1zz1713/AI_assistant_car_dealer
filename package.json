@@ -1,6 +1,7 @@
 {
-  "name": "temp-app",
-  "version": "0.1.0",
+  "name": "auto-hunter-eu",
+  "version": "1.0.0",
+  "description": "AI-powered car aggregator and discovery platform for the European market.",
   "private": true,
   "scripts": {
     "dev": "next dev",
