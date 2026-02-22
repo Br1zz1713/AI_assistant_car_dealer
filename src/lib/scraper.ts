@@ -129,6 +129,8 @@ Return ONLY the raw JSON array.
         `;
 
         try {
+            if (!model) throw new Error("AI Model not initialized (missing API key)");
+
             const result = await model.generateContent(prompt);
             const responseText = result.response?.text();
             if (!responseText) throw new Error("Empty AI response");
@@ -178,16 +180,16 @@ Return ONLY the raw JSON array.
         let results: ScrapedCar[] = [];
         switch (country.toLowerCase()) {
             case "poland":
-                results = await this.fetchOtomoto(brand, model);
+                results = await this.fetchOtomoto(brand, model, minPrice, maxPrice);
                 break;
             case "romania":
-                results = await this.fetchAutovit(brand, model);
+                results = await this.fetchAutovit(brand, model, minPrice, maxPrice);
                 break;
             case "bulgaria":
-                results = await this.fetchMobileBg(brand, model);
+                results = await this.fetchMobileBg(brand, model, minPrice, maxPrice);
                 break;
             case "moldova":
-                results = await this.fetch999Md(brand, model);
+                results = await this.fetch999Md(brand, model, minPrice, maxPrice);
                 break;
             default:
                 results = [];
@@ -203,7 +205,7 @@ Return ONLY the raw JSON array.
 
     // ─── Poland — Otomoto ─────────────────────────────────────────────────────
 
-    private async fetchOtomoto(brand?: string, model?: string): Promise<ScrapedCar[]> {
+    private async fetchOtomoto(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
         const slug = [brand, model]
             .filter(Boolean)
             .map(s => s!.toLowerCase().replace(/\s+/g, "-"))
@@ -226,7 +228,7 @@ Return ONLY the raw JSON array.
             return normalized;
         } catch (err) {
             console.error("[Otomoto] Fetch failed:", err);
-            return this.fallbackMock("Otomoto", "Poland", brand, model, 6);
+            return this.fallbackMock("Otomoto", "Poland", brand, model, 6, minPrice, maxPrice);
         }
     }
 
@@ -314,7 +316,7 @@ Return ONLY the raw JSON array.
 
     // ─── Romania — Autovit ────────────────────────────────────────────────────
 
-    private async fetchAutovit(brand?: string, model?: string): Promise<ScrapedCar[]> {
+    private async fetchAutovit(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
         const b = brand?.toLowerCase().replace(/\s+/g, "-") ?? "";
         const m = model?.toLowerCase().replace(/\s+/g, "-") ?? "";
         const path = [b, m].filter(Boolean).join("/");
@@ -335,7 +337,7 @@ Return ONLY the raw JSON array.
             return normalized;
         } catch (err) {
             console.error("[Autovit] Fetch failed:", err);
-            return this.fallbackMock("Autovit", "Romania", brand, model, 7);
+            return this.fallbackMock("Autovit", "Romania", brand, model, 7, minPrice, maxPrice);
         }
     }
 
@@ -422,7 +424,7 @@ Return ONLY the raw JSON array.
 
     // ─── Bulgaria — Mobile.bg ─────────────────────────────────────────────────
 
-    private async fetchMobileBg(brand?: string, model?: string): Promise<ScrapedCar[]> {
+    private async fetchMobileBg(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
         const b = encodeURIComponent(brand ?? "");
         const m = encodeURIComponent(model ?? "");
         const url = `https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=cars&f10=${b}&f11=${m}`;
@@ -442,7 +444,7 @@ Return ONLY the raw JSON array.
             return normalized;
         } catch (err) {
             console.error("[Mobile.bg] Fetch failed:", err);
-            return this.fallbackMock("Mobile.bg", "Bulgaria", brand, model, 5);
+            return this.fallbackMock("Mobile.bg", "Bulgaria", brand, model, 5, minPrice, maxPrice);
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -497,7 +499,7 @@ Return ONLY the raw JSON array.
 
     // ─── Moldova — 999.md ─────────────────────────────────────────────────────
 
-    private async fetch999Md(brand?: string, model?: string): Promise<ScrapedCar[]> {
+    private async fetch999Md(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
         const params = new URLSearchParams({
             applied_filter_origin: "url",
             ...(brand && { "f[brand][0]": brand }),
@@ -520,7 +522,7 @@ Return ONLY the raw JSON array.
             return normalized;
         } catch (err) {
             console.error("[999.md] Fetch failed:", err);
-            return this.fallbackMock("999.md", "Moldova", brand, model, 8);
+            return this.fallbackMock("999.md", "Moldova", brand, model, 8, minPrice, maxPrice);
         }
     }
 
@@ -563,7 +565,9 @@ Return ONLY the raw JSON array.
         country: string,
         brand?: string,
         model?: string,
-        count = 5
+        count = 5,
+        minPrice?: number,
+        maxPrice?: number
     ): ScrapedCar[] {
         console.warn(`[${platform}] Using fallback mock data — real fetch failed`);
         const IMAGES: Record<string, string> = {
@@ -573,13 +577,18 @@ Return ONLY the raw JSON array.
             "999.md": "https://images.unsplash.com/photo-1590362891175-3794ac1b88c3?auto=format&fit=crop&q=80&w=800",
         };
         const prefix = platform.replace(/[^a-z]/gi, "").slice(0, 3).toLowerCase();
+
+        // Adjust price to be within filter range if possible
+        const basePrice = maxPrice ? Math.max(minPrice || 0, maxPrice - 5000) : (minPrice || 15000);
+        const priceStep = maxPrice ? (maxPrice - basePrice) / count : 1000;
+
         return Array.from({ length: count }).map((_, i) => ({
             id: `${prefix}-mock-${i}`,
             title: `${brand ?? "Car"} ${model ?? ""} (Mock)`,
             brand: brand ?? "Unknown",
             model: model ?? "Unknown",
-            year: 2019 + i,
-            price: 20000 + i * 1000,
+            year: 2018 + i,
+            price: Math.floor(basePrice + i * priceStep),
             mileage: 40000 + i * 5000,
             fuel: "Diesel",
             gearbox: "Automatic",

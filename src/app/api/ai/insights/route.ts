@@ -25,14 +25,14 @@ export async function POST(request: Request) {
       Base the valueScore on the balance of age, mileage, brand reliability, and price relative to the European market average.
     `;
 
-        if (!process.env.GOOGLE_GEMINI_API_KEY) {
+        if (!process.env.GOOGLE_GEMINI_API_KEY || !model) {
             return NextResponse.json({
                 insights: {
                     valueScore: 50,
                     marketStatus: "Fair Price",
                     pros: ["Reliable model", "Good specs"],
                     cons: ["Market average"],
-                    summary: "AI analysis is currently unavailable (API key missing)."
+                    summary: "AI analysis is currently unavailable (API key missing or invalid)."
                 }
             });
         }

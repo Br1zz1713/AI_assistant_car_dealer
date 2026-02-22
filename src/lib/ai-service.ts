@@ -42,6 +42,7 @@ export async function getAiRecommendations(
     `;
 
     try {
+        if (!model) throw new Error("AI Model not initialized (missing API key)");
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const cleanJson = responseText.replace(/```json|```/g, "").trim();
@@ -81,6 +82,7 @@ export async function getSpotSummary(car: { brand: string, model: string, locati
     `;
 
     try {
+        if (!model) throw new Error("AI Model not initialized (missing API key)");
         const result = await model.generateContent(prompt);
         return result.response.text().trim();
     } catch (error) {

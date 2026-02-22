@@ -130,6 +130,8 @@ export async function stealthFetch(
                 signal: AbortSignal.timeout(30_000),
             });
 
+            console.log(`[stealthFetch] ${res.status} ${res.statusText} from ${fetchUrl.slice(0, 50)}...`);
+
             if (res.status === 403 || res.status === 401) {
                 console.warn(`[stealthFetch] Blocked (${res.status}) on attempt ${attempt}`);
                 if (attempt < maxRetries) {
@@ -201,6 +203,7 @@ Return ONLY the raw JSON array, no explanation, no markdown fences.
     `.trim();
 
     try {
+        if (!model) throw new Error("AI Model not initialized (missing API key)");
         const result = await model.generateContent(prompt);
         const text = result.response?.text() ?? "";
         const clean = text.replace(/```json|```/g, "").trim();
