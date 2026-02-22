@@ -45,8 +45,59 @@ function extractNumber(s: string): number {
 
 export class ScraperEngine {
     /**
-     * Normalizes raw car data using Gemini 1.5 Flash
+     * Extracts car data from __NEXT_DATA__ script tag if available (Otomoto/Autovit)
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private extractCarsFromNextData(html: string): Record<string, any>[] | null {
+        try {
+            const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+            if (!nextDataMatch) return null;
+            const data = JSON.parse(nextDataMatch[1]);
+            const urqlState = data.props?.pageProps?.urqlState;
+            if (!urqlState) return null;
+
+            for (const key in urqlState) {
+                const entry = urqlState[key];
+                if (entry.data) {
+                    const parsed = JSON.parse(entry.data);
+                    const advertSearch = parsed.advertSearch || parsed.searchAdvertisements;
+                    if (advertSearch && advertSearch.edges) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        return advertSearch.edges.map((edge: any) => {
+                            const node = edge.node;
+                            const params = node.parameters || [];
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            const getParam = (k: string) => params.find((p: any) => p.key === k)?.value;
+
+                            return {
+                                id: node.id,
+                                url: node.url,
+                                title: node.title,
+                                price: node.price?.value || node.price?.total?.amount || node.price?.amount || 0,
+                                currency: node.price?.currency || node.price?.currencyCode || "EUR",
+                                images: (node.images && node.images.length > 0)
+                                    ? node.images.map((img: any) => img.src || img.x1 || img.x2)
+                                    : (node.thumbnail ? [node.thumbnail.x1 || node.thumbnail.x2 || node.thumbnail.src] : []),
+                                year: parseInt(getParam('year') || getParam('rok-produkcji') || "0", 10),
+                                mileage: parseInt(getParam('mileage') || getParam('przebieg') || "0", 10),
+                                fuel: getParam('fuel_type') || getParam('rodzaj-paliwa') || "Unknown",
+                                gearbox: getParam('gearbox') || getParam('skrzynia-biegow') || "Unknown",
+                                brand: getParam('make') || getParam('marka-pojazdu') || "Unknown",
+                                model: getParam('model') || getParam('model-pojazdu') || "Unknown",
+                                location: node.location?.city?.name || node.location?.region?.name || "Unknown"
+                            };
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("[Scraper] Error extracting from __NEXT_DATA__", e);
+        }
+        return null;
+    }
+
+    /**
+     * Normalizes raw car data using Gemini 1.5 Flash     */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async normalizeWithAi(rawCars: Record<string, any>[]): Promise<ScrapedCar[]> {
         if (!rawCars || rawCars.length === 0) return [];
@@ -181,6 +232,11 @@ Return ONLY the raw JSON array.
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private parseOtomotoHtml(html: string, baseUrl: string): Record<string, any>[] {
+        const nextDataCars = this.extractCarsFromNextData(html);
+        if (nextDataCars && nextDataCars.length > 0) {
+            return nextDataCars;
+        }
+
         // Otomoto renders article[data-id] cards
         const articleRe = /<article[^>]*data-id="([^"]+)"[^>]*>([\s\S]*?)<\/article>/gi;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -285,6 +341,11 @@ Return ONLY the raw JSON array.
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private parseAutovitHtml(html: string, baseUrl: string): Record<string, any>[] {
+        const nextDataCars = this.extractCarsFromNextData(html);
+        if (nextDataCars && nextDataCars.length > 0) {
+            return nextDataCars;
+        }
+
         // Autovit shares the same UI engine as Otomoto
         const articleRe = /<article[^>]*data-id="([^"]+)"[^>]*>([\s\S]*?)<\/article>/gi;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
