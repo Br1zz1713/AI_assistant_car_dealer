@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
         const prompt = `
       Analyze the "Value for Money" and provide a concise "Pros & Cons" summary for the following car:
-      ${car.brand} ${car.model} ${car.year} (${car.fuel}, ${car.mileage}km, €${car.price})
+      ${car.brand} ${car.model} ${car.year} (${car.fuel}, ${car.mileage}km, €${car.price_eur})
       
       Return ONLY a JSON object with fields:
       - valueScore (number between 0-100)

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         // Construct the context for Gemini
         let context = "You are an expert car buying assistant for the European market. ";
         if (currentCar) {
-            context += `The user is currently looking at: ${currentCar.brand} ${currentCar.model} (${currentCar.year}, ${currentCar.fuel}, €${currentCar.price}). `;
+            context += `The user is currently looking at: ${currentCar.brand} ${currentCar.model} (${currentCar.year}, ${currentCar.fuel}, €${currentCar.price_eur}). `;
         }
         context += "Provide helpful, concise, and expert advice. Support your claims with technical reasoning.";
 

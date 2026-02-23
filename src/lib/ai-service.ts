@@ -71,10 +71,10 @@ export async function getAiRecommendations(
 /**
  * Generates a catchy one-sentence summary for a new car find.
  */
-export async function getSpotSummary(car: { brand: string, model: string, location: string, price: number }): Promise<string> {
+export async function getSpotSummary(car: { brand: string, model: string, location: string, price_eur: number }): Promise<string> {
     const prompt = `
         Generate a catchy, professional one-sentence summary for a new car deal.
-        Car: ${car.brand} ${car.model} in ${car.location} for €${car.price.toLocaleString()}.
+        Car: ${car.brand} ${car.model} in ${car.location} for €${car.price_eur.toLocaleString()}.
         
         Example: "🔥 Fresh find in Bucharest: Audi A6 at a 10% market discount"
         
@@ -88,6 +88,6 @@ export async function getSpotSummary(car: { brand: string, model: string, locati
     } catch (error) {
         console.error("AI Service Error (getSpotSummary):", error);
         // Clean fallback without AI tone
-        return `New match found: ${car.brand} ${car.model} in ${car.location} for €${car.price.toLocaleString()}.`;
+        return `New match found: ${car.brand} ${car.model} in ${car.location} for €${car.price_eur.toLocaleString()}.`;
     }
 }
