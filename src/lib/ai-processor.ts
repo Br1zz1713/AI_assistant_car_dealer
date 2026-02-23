@@ -58,6 +58,7 @@ export async function normalizeScrapedData(raw: RawScrapedData, targetLocale: st
   `;
 
     try {
+        if (!model) throw new Error("AI Model not initialized (missing API key)");
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
@@ -90,6 +91,7 @@ export async function detectDuplicate(newCar: Partial<NormalizedCar>, existingCa
   `;
 
     try {
+        if (!model) return false;
         const result = await model.generateContent(prompt);
         const text = result.response.text();
         return text.toUpperCase().startsWith("YES");
