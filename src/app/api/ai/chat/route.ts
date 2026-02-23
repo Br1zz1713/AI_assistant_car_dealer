@@ -24,6 +24,8 @@ export async function POST(request: Request) {
         }
         context += "Provide helpful, concise, and expert advice. Support your claims with technical reasoning.";
 
+        if (!model) throw new Error("AI Model not initialized (missing API key)");
+
         const history = messages.map((msg: Message) => ({
             role: msg.role === "user" ? "user" : "model",
             parts: [{ text: msg.content }],

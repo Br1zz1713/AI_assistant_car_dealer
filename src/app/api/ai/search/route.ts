@@ -25,6 +25,8 @@ export async function POST(request: Request) {
       { "brand": "BMW", "model": null, "maxPrice": 30000, "country": "Germany", "fuel": null }
     `;
 
+        if (!model) throw new Error("AI Model not initialized");
+
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const cleanJson = responseText.replace(/```json|```/g, "").trim();

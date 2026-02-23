@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { model } from "@/lib/gemini";
 
 export async function POST(request: Request) {
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
-        return NextResponse.json({ error: "AI Service Unavailable (Missing Key)" }, { status: 503 });
+    if (!process.env.GOOGLE_GEMINI_API_KEY || !model) {
+        return NextResponse.json({
+            analysis: {
+                score: 70,
+                summary: "AI analysis is currently unavailable (API key missing or invalid).",
+                recommendation: "Standard market verification recommended."
+            }
+        });
     }
 
     try {
@@ -38,6 +44,8 @@ export async function POST(request: Request) {
             Specs: ${JSON.stringify(specs)}
             Original Description: ${description}
         `;
+
+        if (!model) throw new Error("AI Model not initialized");
 
         const result = await model.generateContent([
             { text: systemInstruction },
