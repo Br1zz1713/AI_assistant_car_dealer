@@ -1,0 +1,15 @@
+name: Market Pulse (Scraper Update)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Scraper Pulse
+        run: |
+          curl -X GET "https://ai-assistant-car-dealer.vercel.app/api/spotting/check?manual=true" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
