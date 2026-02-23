@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             let match = true;
             if (params.brand && !car.brand.toLowerCase().includes(params.brand.toLowerCase())) match = false;
             if (params.model && !car.model.toLowerCase().includes(params.model.toLowerCase())) match = false;
-            if (params.maxPrice && car.price > params.maxPrice) match = false;
+            if (params.maxPrice && car.price_eur > params.maxPrice) match = false;
             if (params.country && !car.country.toLowerCase().includes(params.country.toLowerCase())) match = false;
             if (params.fuel && !car.fuel.toLowerCase().includes(params.fuel.toLowerCase())) match = false;
             return match;

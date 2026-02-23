@@ -53,9 +53,8 @@ export async function GET(request: Request) {
                             p_source_platform: car.sourcePlatform,
                             p_url: car.sourceUrl,
                             p_title: car.title,
-                            p_price: car.price,
-                            p_image: car.image,
-                            p_gallery: car.gallery,
+                            p_price_eur: car.price_eur,
+                            p_images: car.images,
                             p_specs: {
                                 year: car.year,
                                 mileage: car.mileage,

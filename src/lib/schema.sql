@@ -4,9 +4,8 @@ CREATE TABLE IF NOT EXISTS public.listings (
     source_platform TEXT NOT NULL,
     url TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
-    price NUMERIC NOT NULL,
-    image TEXT,
-    gallery TEXT[] DEFAULT '{}',
+    price_eur NUMERIC NOT NULL,
+    images TEXT[] DEFAULT '{}',
     specs JSONB DEFAULT '{}',
     country TEXT NOT NULL,
     is_new_match BOOLEAN DEFAULT true,
@@ -19,9 +18,8 @@ CREATE OR REPLACE FUNCTION public.upsert_listing(
   p_source_platform TEXT,
   p_url TEXT,
   p_title TEXT,
-  p_price NUMERIC,
-  p_image TEXT,
-  p_gallery TEXT[],
+  p_price_eur NUMERIC,
+  p_images TEXT[],
   p_specs JSONB,
   p_country TEXT
 ) RETURNS UUID AS $$
@@ -29,14 +27,13 @@ DECLARE
   v_id UUID;
 BEGIN
   INSERT INTO public.listings (
-    external_id, source_platform, url, title, price, image, gallery, specs, country, is_new_match
+    external_id, source_platform, url, title, price_eur, images, specs, country, is_new_match
   ) VALUES (
-    p_external_id, p_source_platform, p_url, p_title, p_price, p_image, p_gallery, p_specs, p_country, true
+    p_external_id, p_source_platform, p_url, p_title, p_price_eur, p_images, p_specs, p_country, true
   )
   ON CONFLICT (url) DO UPDATE SET
-    price = EXCLUDED.price,
-    image = EXCLUDED.image,
-    gallery = EXCLUDED.gallery,
+    price_eur = EXCLUDED.price_eur,
+    images = EXCLUDED.images,
     specs = EXCLUDED.specs,
     title = EXCLUDED.title,
     is_new_match = true,

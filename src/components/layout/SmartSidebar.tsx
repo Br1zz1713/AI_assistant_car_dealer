@@ -14,7 +14,7 @@ interface SmartSidebarProps {
 interface Recommendation {
     brand: string;
     model: string;
-    price: number;
+    price_eur: number;
     segment_reason: string;
 }
 
@@ -74,7 +74,7 @@ export function SmartSidebar({ currentCarId }: SmartSidebarProps) {
                                     <span className="text-xs text-muted-foreground">{rec.model}</span>
                                 </div>
                                 <span className="text-primary font-bold text-sm bg-primary/5 px-2 py-0.5 rounded">
-                                    €{rec.price.toLocaleString()}
+                                    €{rec.price_eur.toLocaleString()}
                                 </span>
                             </div>
                             <div className="relative">

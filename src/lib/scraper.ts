@@ -111,7 +111,7 @@ Format each object to match this TypeScript interface:
     sourcePlatform: string,
     image: string (main image URL),
     gallery: string[] (other image URLs),
-    price: number (in EUR),
+    price_eur: number (in EUR),
     title: string,
     brand: string,
     model: string,
@@ -120,7 +120,8 @@ Format each object to match this TypeScript interface:
     fuel: string,
     gearbox: string,
     location: string,
-    country: string
+    country: string,
+    images: string[] (all image URLs)
 }
 
 Raw Data: ${JSON.stringify(rawCars.slice(0, 10))}
@@ -143,10 +144,8 @@ Return ONLY the raw JSON array.
             return (rawCars || []).map((rc: Record<string, any>, i: number) => ({
                 id: rc.id || `raw-${i}`,
                 sourceUrl: rc.url || rc.source_url || "",
-                sourcePlatform: rc.provider || rc.sourcePlatform || "Unknown",
-                image: rc.images?.[0] || rc.image || "",
-                gallery: rc.images?.slice(1) || [],
-                price: rc.price_eur || rc.price || 0,
+                price_eur: rc.price_eur || rc.price || 0,
+                images: rc.images || [rc.image, ...(rc.gallery || [])].filter(Boolean),
                 title: rc.title || `${rc.brand || ""} ${rc.model || ""}`.trim() || "Unknown",
                 brand: rc.brand || "Unknown",
                 model: rc.model || "Unknown",
@@ -156,6 +155,7 @@ Return ONLY the raw JSON array.
                 gearbox: rc.gearbox || "Unknown",
                 location: rc.location || "Unknown",
                 country: rc.country || "Unknown",
+                sourcePlatform: rc.provider || rc.sourcePlatform || "Unknown",
             })) as ScrapedCar[];
         }
     }
@@ -199,8 +199,8 @@ Return ONLY the raw JSON array.
 
         return results.filter(car => {
             const matchPrice =
-                (!minPrice || car.price >= minPrice) &&
-                (!maxPrice || car.price <= maxPrice);
+                (!minPrice || car.price_eur >= minPrice) &&
+                (!maxPrice || car.price_eur <= maxPrice);
             const matchYear =
                 (!minYear || car.year >= minYear) &&
                 (!maxYear || car.year <= maxYear);
@@ -622,12 +622,11 @@ Return ONLY the raw JSON array.
             brand: brand ?? "Unknown",
             model: model ?? "Unknown",
             year: baseYear + (i % 5),
-            price: Math.floor(basePrice + i * priceStep),
+            price_eur: Math.floor(basePrice + i * priceStep),
             mileage: 40000 + i * 5000,
             fuel: "Diesel",
             gearbox: "Automatic",
-            image: IMAGES[platform] ?? "",
-            gallery: [],
+            images: IMAGES[platform] ? [IMAGES[platform]] : [],
             sourceUrl: `https://example.com/listing/${i}`,
             sourcePlatform: platform,
             location: country,

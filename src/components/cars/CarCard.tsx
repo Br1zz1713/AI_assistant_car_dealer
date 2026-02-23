@@ -36,7 +36,7 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
         setIsMounted(true);
     }, []);
 
-    const allImages = [car.image, ...(car.gallery || [])];
+    const allImages = car.images || [];
 
     const { data: insights, isLoading: isInsightsLoading } = useQuery({
         queryKey: ["insights", car.id],
@@ -171,7 +171,7 @@ export function CarCard({ car, isFavorited: initialIsFavorited = false, isSelect
                         </div>
                         <div className="text-right">
                             <p className="font-bold text-xl text-primary leading-none">
-                                €{isMounted ? car.price.toLocaleString() : car.price}
+                                €{isMounted ? car.price_eur.toLocaleString() : car.price_eur}
                             </p>
                             <p className="text-[10px] text-muted-foreground mt-1 uppercase font-semibold">{car.location}</p>
                         </div>

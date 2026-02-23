@@ -37,9 +37,6 @@ export function DiscoveryPlatform({ initialCars }: DiscoveryPlatformProps) {
 
             const res = await fetch(`/api/cars?${params.toString()}`);
             const data = await res.json();
-
-            // Map common API fields back to our internal Car interface if needed
-            // For now, ScraperEngine returns mostly compatible objects
             return data.cars as Car[];
         },
         enabled: filters.country !== "all" || !!filters.brand
@@ -47,10 +44,8 @@ export function DiscoveryPlatform({ initialCars }: DiscoveryPlatformProps) {
 
     useEffect(() => {
         if (aggregatedData) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setDisplayCars(aggregatedData);
             if (aggregatedData.length > 0) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSelectedCarId(aggregatedData[0].id);
             }
         }
