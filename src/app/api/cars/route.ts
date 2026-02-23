@@ -8,9 +8,11 @@ export async function GET(request: Request) {
     const model = searchParams.get("model") || undefined;
     const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
     const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+    const minYear = searchParams.get("minYear") ? Number(searchParams.get("minYear")) : undefined;
+    const maxYear = searchParams.get("maxYear") ? Number(searchParams.get("maxYear")) : undefined;
 
     try {
-        const cars = await scraper.getCars(country, brand, model, minPrice, maxPrice);
+        const cars = await scraper.getCars(country, brand, model, minPrice, maxPrice, minYear, maxYear);
         return NextResponse.json({ cars });
     } catch (error) {
         console.error("Aggregation Error:", error);

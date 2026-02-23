@@ -17,7 +17,7 @@ interface DiscoveryPlatformProps {
 }
 
 export function DiscoveryPlatform({ initialCars }: DiscoveryPlatformProps) {
-    const [filters, setFilters] = useState<{ country: string; brand?: string; model?: string; minPrice?: number; maxPrice?: number }>({
+    const [filters, setFilters] = useState<{ country: string; brand?: string; model?: string; minPrice?: number; maxPrice?: number; minYear?: number }>({
         country: "all",
         minPrice: 0,
         maxPrice: 50000
@@ -33,6 +33,7 @@ export function DiscoveryPlatform({ initialCars }: DiscoveryPlatformProps) {
             if (filters.brand) params.append("brand", filters.brand);
             if (filters.minPrice !== undefined) params.append("minPrice", filters.minPrice.toString());
             if (filters.maxPrice !== undefined) params.append("maxPrice", filters.maxPrice.toString());
+            if (filters.minYear !== undefined) params.append("minYear", filters.minYear.toString());
 
             const res = await fetch(`/api/cars?${params.toString()}`);
             const data = await res.json();

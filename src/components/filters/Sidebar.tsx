@@ -18,7 +18,7 @@ import {
 
 interface SidebarProps {
     onAiSearch?: (cars: Car[]) => void;
-    onFilter?: (filters: { country: string; brand?: string; model?: string; minPrice?: number; maxPrice?: number }) => void;
+    onFilter?: (filters: { country: string; brand?: string; model?: string; minPrice?: number; maxPrice?: number; minYear?: number }) => void;
     onClear?: () => void;
 }
 
@@ -50,17 +50,20 @@ export function Sidebar({ onAiSearch, onFilter, onClear }: SidebarProps) {
     };
 
     const handleApplyFilters = () => {
+        const minYear = year ? parseInt(year.replace(/\D/g, ""), 10) : undefined;
         if (onFilter) {
             onFilter({
                 country: selectedCountry,
                 brand: brand || undefined,
                 minPrice: priceRange[0],
                 maxPrice: priceRange[1],
+                minYear,
             });
         }
     };
 
     const handleCountryChange = (value: string) => {
+        const minYear = year ? parseInt(year.replace(/\D/g, ""), 10) : undefined;
         setSelectedCountry(value);
         if (onFilter) {
             onFilter({
@@ -68,6 +71,7 @@ export function Sidebar({ onAiSearch, onFilter, onClear }: SidebarProps) {
                 brand: brand || undefined,
                 minPrice: priceRange[0],
                 maxPrice: priceRange[1],
+                minYear,
             });
         }
     };

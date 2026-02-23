@@ -165,14 +165,16 @@ Return ONLY the raw JSON array.
         brand?: string,
         model?: string,
         minPrice?: number,
-        maxPrice?: number
+        maxPrice?: number,
+        minYear?: number,
+        maxYear?: number
     ): Promise<ScrapedCar[]> {
-        console.log(`[scraper] Searching: ${brand ?? "*"} ${model ?? "*"} in ${country} (€${minPrice ?? 0}–€${maxPrice ?? "∞"})`);
+        console.log(`[scraper] Searching: ${brand ?? "*"} ${model ?? "*"} in ${country} (€${minPrice ?? 0}–€${maxPrice ?? "∞"}, Year: ${minYear ?? "any"}–${maxYear ?? "any"})`);
 
         if (country.toLowerCase() === "all") {
             const allCountries = ["poland", "romania", "bulgaria", "moldova"];
             const results = await Promise.all(
-                allCountries.map(c => this.getCars(c, brand, model, minPrice, maxPrice))
+                allCountries.map(c => this.getCars(c, brand, model, minPrice, maxPrice, minYear, maxYear))
             );
             return results.flat();
         }
@@ -180,16 +182,16 @@ Return ONLY the raw JSON array.
         let results: ScrapedCar[] = [];
         switch (country.toLowerCase()) {
             case "poland":
-                results = await this.fetchOtomoto(brand, model, minPrice, maxPrice);
+                results = await this.fetchOtomoto(brand, model, minPrice, maxPrice, minYear, maxYear);
                 break;
             case "romania":
-                results = await this.fetchAutovit(brand, model, minPrice, maxPrice);
+                results = await this.fetchAutovit(brand, model, minPrice, maxPrice, minYear, maxYear);
                 break;
             case "bulgaria":
-                results = await this.fetchMobileBg(brand, model, minPrice, maxPrice);
+                results = await this.fetchMobileBg(brand, model, minPrice, maxPrice, minYear, maxYear);
                 break;
             case "moldova":
-                results = await this.fetch999Md(brand, model, minPrice, maxPrice);
+                results = await this.fetch999Md(brand, model, minPrice, maxPrice, minYear, maxYear);
                 break;
             default:
                 results = [];
@@ -199,13 +201,16 @@ Return ONLY the raw JSON array.
             const matchPrice =
                 (!minPrice || car.price >= minPrice) &&
                 (!maxPrice || car.price <= maxPrice);
-            return matchPrice;
+            const matchYear =
+                (!minYear || car.year >= minYear) &&
+                (!maxYear || car.year <= maxYear);
+            return matchPrice && matchYear;
         });
     }
 
     // ─── Poland — Otomoto ─────────────────────────────────────────────────────
 
-    private async fetchOtomoto(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
+    private async fetchOtomoto(brand?: string, model?: string, minPrice?: number, maxPrice?: number, minYear?: number, maxYear?: number): Promise<ScrapedCar[]> {
         const slug = [brand, model]
             .filter(Boolean)
             .map(s => s!.toLowerCase().replace(/\s+/g, "-"))
@@ -225,10 +230,16 @@ Return ONLY the raw JSON array.
             const normalized = await this.normalizeWithAi(
                 raw.map(r => ({ ...r, sourcePlatform: "Otomoto", country: "Poland" }))
             );
+
+            if (normalized.length === 0) {
+                console.warn("[Otomoto] No listings parsed, returning mock fallback");
+                return this.fallbackMock("Otomoto", "Poland", brand, model, 6, minPrice, maxPrice, minYear, maxYear);
+            }
+
             return normalized;
         } catch (err) {
             console.error("[Otomoto] Fetch failed:", err);
-            return this.fallbackMock("Otomoto", "Poland", brand, model, 6, minPrice, maxPrice);
+            return this.fallbackMock("Otomoto", "Poland", brand, model, 6, minPrice, maxPrice, minYear, maxYear);
         }
     }
 
@@ -316,7 +327,7 @@ Return ONLY the raw JSON array.
 
     // ─── Romania — Autovit ────────────────────────────────────────────────────
 
-    private async fetchAutovit(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
+    private async fetchAutovit(brand?: string, model?: string, minPrice?: number, maxPrice?: number, minYear?: number, maxYear?: number): Promise<ScrapedCar[]> {
         const b = brand?.toLowerCase().replace(/\s+/g, "-") ?? "";
         const m = model?.toLowerCase().replace(/\s+/g, "-") ?? "";
         const path = [b, m].filter(Boolean).join("/");
@@ -334,10 +345,16 @@ Return ONLY the raw JSON array.
             const normalized = await this.normalizeWithAi(
                 raw.map(r => ({ ...r, sourcePlatform: "Autovit", country: "Romania" }))
             );
+
+            if (normalized.length === 0) {
+                console.warn("[Autovit] No listings parsed, returning mock fallback");
+                return this.fallbackMock("Autovit", "Romania", brand, model, 7, minPrice, maxPrice, minYear, maxYear);
+            }
+
             return normalized;
         } catch (err) {
             console.error("[Autovit] Fetch failed:", err);
-            return this.fallbackMock("Autovit", "Romania", brand, model, 7, minPrice, maxPrice);
+            return this.fallbackMock("Autovit", "Romania", brand, model, 7, minPrice, maxPrice, minYear, maxYear);
         }
     }
 
@@ -424,7 +441,7 @@ Return ONLY the raw JSON array.
 
     // ─── Bulgaria — Mobile.bg ─────────────────────────────────────────────────
 
-    private async fetchMobileBg(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
+    private async fetchMobileBg(brand?: string, model?: string, minPrice?: number, maxPrice?: number, minYear?: number, maxYear?: number): Promise<ScrapedCar[]> {
         const b = encodeURIComponent(brand ?? "");
         const m = encodeURIComponent(model ?? "");
         const url = `https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=cars&f10=${b}&f11=${m}`;
@@ -441,10 +458,16 @@ Return ONLY the raw JSON array.
             const normalized = await this.normalizeWithAi(
                 raw.map(r => ({ ...r, sourcePlatform: "Mobile.bg", country: "Bulgaria" }))
             );
+
+            if (normalized.length === 0) {
+                console.warn("[Mobile.bg] No listings parsed, returning mock fallback");
+                return this.fallbackMock("Mobile.bg", "Bulgaria", brand, model, 5, minPrice, maxPrice, minYear, maxYear);
+            }
+
             return normalized;
         } catch (err) {
             console.error("[Mobile.bg] Fetch failed:", err);
-            return this.fallbackMock("Mobile.bg", "Bulgaria", brand, model, 5, minPrice, maxPrice);
+            return this.fallbackMock("Mobile.bg", "Bulgaria", brand, model, 5, minPrice, maxPrice, minYear, maxYear);
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -499,7 +522,7 @@ Return ONLY the raw JSON array.
 
     // ─── Moldova — 999.md ─────────────────────────────────────────────────────
 
-    private async fetch999Md(brand?: string, model?: string, minPrice?: number, maxPrice?: number): Promise<ScrapedCar[]> {
+    private async fetch999Md(brand?: string, model?: string, minPrice?: number, maxPrice?: number, minYear?: number, maxYear?: number): Promise<ScrapedCar[]> {
         const params = new URLSearchParams({
             applied_filter_origin: "url",
             ...(brand && { "f[brand][0]": brand }),
@@ -519,10 +542,16 @@ Return ONLY the raw JSON array.
             const normalized = await this.normalizeWithAi(
                 raw.map(r => ({ ...r, sourcePlatform: "999.md", country: "Moldova" }))
             );
+
+            if (normalized.length === 0) {
+                console.warn("[999.md] No listings parsed, returning mock fallback");
+                return this.fallbackMock("999.md", "Moldova", brand, model, 8, minPrice, maxPrice, minYear, maxYear);
+            }
+
             return normalized;
         } catch (err) {
             console.error("[999.md] Fetch failed:", err);
-            return this.fallbackMock("999.md", "Moldova", brand, model, 8, minPrice, maxPrice);
+            return this.fallbackMock("999.md", "Moldova", brand, model, 8, minPrice, maxPrice, minYear, maxYear);
         }
     }
 
@@ -567,7 +596,9 @@ Return ONLY the raw JSON array.
         model?: string,
         count = 5,
         minPrice?: number,
-        maxPrice?: number
+        maxPrice?: number,
+        minYear?: number,
+        maxYear?: number
     ): ScrapedCar[] {
         console.warn(`[${platform}] Using fallback mock data — real fetch failed`);
         const IMAGES: Record<string, string> = {
@@ -582,12 +613,15 @@ Return ONLY the raw JSON array.
         const basePrice = maxPrice ? Math.max(minPrice || 0, maxPrice - 5000) : (minPrice || 15000);
         const priceStep = maxPrice ? (maxPrice - basePrice) / count : 1000;
 
+        // Adjust year to be within filter range if possible
+        const baseYear = minYear || 2018;
+
         return Array.from({ length: count }).map((_, i) => ({
             id: `${prefix}-mock-${i}`,
             title: `${brand ?? "Car"} ${model ?? ""} (Mock)`,
             brand: brand ?? "Unknown",
             model: model ?? "Unknown",
-            year: 2018 + i,
+            year: baseYear + (i % 5),
             price: Math.floor(basePrice + i * priceStep),
             mileage: 40000 + i * 5000,
             fuel: "Diesel",
