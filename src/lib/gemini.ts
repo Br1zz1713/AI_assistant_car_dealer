@@ -15,6 +15,5 @@ const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Use the latest stable flash model
 export const model = genAI ? genAI.getGenerativeModel(
-    { model: "gemini-1.5-flash" },
-    { apiVersion: 'v1' }
+    { model: "gemini-1.5-flash" }
 ) : null;
