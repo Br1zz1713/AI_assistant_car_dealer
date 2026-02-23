@@ -1,6 +1,7 @@
 "use client";
 
 import { MySpotsDashboard } from "@/components/scout/MySpotsDashboard";
+import { ScraperStatus } from "@/components/scout/ScraperStatus";
 import { CreateSpotModal } from "@/components/scout/CreateSpotModal";
 import { Radar, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +30,8 @@ export default function ScoutPage() {
                 </div>
                 <CreateSpotModal />
             </div>
+
+            <ScraperStatus />
 
             <section className="space-y-6">
                 <div className="flex items-center gap-2 border-b border-primary/10 pb-4">

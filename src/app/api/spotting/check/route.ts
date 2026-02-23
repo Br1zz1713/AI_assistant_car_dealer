@@ -2,9 +2,19 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { scraper, wait } from "@/lib/scraper";
 
-export async function GET() {
+export async function GET(request: Request) {
     const startTime = Date.now();
-    const VERCEL_TIMEOUT_MS = 9000; // 9 second safety limit for Vercel Hobby/Pro execution
+    const VERCEL_TIMEOUT_MS = 9000;
+
+    // Authorization check for Vercel Cron or Manual Debug
+    const authHeader = request.headers.get("authorization");
+    const { searchParams } = new URL(request.url);
+    const isManual = searchParams.get("manual") === "true";
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!isManual && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     try {
         console.time("SpottingCheckTotal");
@@ -31,15 +41,13 @@ export async function GET() {
 
                 console.time(`Scan-${country}-${sub.id}`);
 
-                // 3. Fetch raw data with randomized headers (implemented in scraper.ts)
-                const rawCars = await scraper.getCars(country, brand, model);
+                // 3. Fetch data (Scraper already handles AI normalization)
+                const listings = await scraper.getCars(country, brand, model);
 
-                // 4. Gemini AI Normalization
-                if (rawCars.length > 0) {
-                    const normalizedCars = await scraper.normalizeWithAi(rawCars);
-
-                    // 5. Database Upsert with duplicate prevention
-                    for (const car of normalizedCars) {
+                // 4. Database Upsert with duplicate prevention
+                if (listings.length > 0) {
+                    console.log(`[Spotting] Processing ${listings.length} listings for ${brand} ${model} in ${country}`);
+                    for (const car of listings) {
                         const { data: newId, error: upsertError } = await supabase.rpc("upsert_listing", {
                             p_external_id: car.id,
                             p_source_platform: car.sourcePlatform,
@@ -60,6 +68,8 @@ export async function GET() {
 
                         if (!upsertError && newId) {
                             totalNewCars++;
+                        } else if (upsertError) {
+                            console.error(`[Spotting] Upsert error:`, upsertError);
                         }
                     }
                 }
